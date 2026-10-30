@@ -1,0 +1,18 @@
+# Overrides for skill-scanner's default scan policy. Merged on top of the
+# built-in defaults (ScanPolicy.from_yaml) -- only the fields below change;
+# everything else (severity thresholds, which analyzers run, etc.) stays at
+# the package's normal default.
+#
+# Why this exists: the default llm_analysis.max_total_prompt_chars is
+# 100,000 chars (~25k tokens), sized for a provider with a generous token
+# budget. We're running the LLM semantic/behavioral layer on Groq's free
+# tier, which caps input tokens per minute far below that (observed: a
+# limit of 7,000 ITPM for qwen/qwen3.8-27b on this account, rejecting a
+# single ~8,270-token request outright). 16,000 chars (~4,000 tokens) of
+# file content leaves headroom under that ceiling for the fixed prompt
+# scaffolding (instructions, delimiters, taxonomy context) that gets added
+# on top. Files beyond this budget are excluded or only partially analyzed
+# by the LLM layer -- surfaced as LLM_CONTEXT_BUDGET_EXCEEDED findings --
+# but static/YARA analysis still covers the full package regardless.
+llm_analysis:
+  max_total_prompt_chars: 16000
